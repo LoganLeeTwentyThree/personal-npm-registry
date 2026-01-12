@@ -17,12 +17,16 @@ There are a few prerequisites for setting up the server.
 4. Set the server as your registry on npm  
 `npm config set registry <SERVER-IP>`
 
-# Working
-login  
-publish  
+## Features
+### Working
+`login`  
+`publish`   
   
-# In Development  
-install  
+### In Development  
+`install`  
 
-# Planned
-all the other npm commands -_-
+### Planned
+- all the other npm commands
+- built-in oauth (no auth0)
+- easy configuration
+- cloudless version
