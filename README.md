@@ -30,4 +30,5 @@ There are a few prerequisites for setting up the server.
 - browserless `login`
 - built-in oauth (no auth0)
 - easy configuration
+- mongoose data schema 
 - cloudless version (stretch goal)
