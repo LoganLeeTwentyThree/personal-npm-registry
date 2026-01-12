@@ -27,6 +27,7 @@ There are a few prerequisites for setting up the server.
 
 ### Planned
 - all the other npm commands
+- browserless `login`
 - built-in oauth (no auth0)
 - easy configuration
-- cloudless version
+- cloudless version (stretch goal)
