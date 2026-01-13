@@ -11,7 +11,19 @@ There are a few prerequisites for setting up the server.
 1. Clone this repository  
 `git clone https://github.com/LoganLeeTwentyThree/personal-npm-registry`
 2. Create `.env.local` in the root of the project
-   - Put mongodb, auth0, and aws credentials in here
+   - There are a few environment variables that need to be filled out
+   - AUTH0
+     - AUTH0_DOMAIN (Provided by Auth0)
+     - AUTH0_CLIENT_ID (Provided by Auth0)
+     - AUTH0_CLIENT_SECRET (Provided by Auth0)
+     - AUTH0_SECRET (Provided by Auth0)
+   - MongoDB
+     - DATABASE_STRING (Provided by MongoDB Atlas)
+   - S3
+     - S3_BUCKET (This is the name of your S3 bucket)
+     - Additionally, login with the [aws cli](https://aws.amazon.com/cli/)
+   - Other
+     - APP_BASE_URL (likely "http://localhost:3000")
 3. Run dev server  
 `npm run dev`
 4. Set the server as your registry on npm  
@@ -20,10 +32,11 @@ There are a few prerequisites for setting up the server.
 ## Features
 ### Working
 `login`  
-`publish`   
+`publish`  
+`install`  
   
 ### In Development  
-`install`  
+Frontend Package Browser
 
 ### Planned
 - all the other npm commands
