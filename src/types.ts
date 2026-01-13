@@ -1,14 +1,16 @@
 import { Timestamp } from 'mongodb';
 
 export type PackageVersionObject = {
-    name : String,
-    version : String,
-    dist: {tarball: String}
+    name : string,
+    version : string,
+    description? : string
+    readme? : string,
+    dist: {tarball: string}
 }
 
 export type PackageRoot = {
-    name : String,
-    versions : Array<{version : string, url : string}>,
+    name : string,
+    versions : {[version : string] : PackageVersionObject},
     mtime? : Timestamp,
     ctime? : Timestamp,
     maintainers? : Array<String>,

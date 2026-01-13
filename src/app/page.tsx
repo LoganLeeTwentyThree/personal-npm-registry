@@ -1,13 +1,12 @@
 import { auth0 } from "@/lib/auth0";
-import PackageList from "@/components/PackageList";
 import { PackageRoot } from "@/types";
 
 const { MongoClient } = require('mongodb');
 import dotenv from 'dotenv'
 import { cookies } from 'next/headers'
 import LoginButton from "@/components/LoginButton";
-const crypto = require('crypto');
-import { generateTokenFromUUID, insertUser } from "@/lib/database";
+import { insertUser } from "@/lib/database";
+import PackageBrowser from "@/components/PackageBrowser";
 
 export default async function Home({
   searchParams,
@@ -79,25 +78,7 @@ export default async function Home({
     }
     
     return (
-      <div>
-        <nav className="bg-white sticky top-0 w-full z-20 border-b border-default">
-          <div className="max-w-screen-xl flex flex-wrap items-center justify-left mx-1 p-4">
-            <img src="/favicon.ico" className="aspect-ratio-1/1 w-15 mx-8"/>
-            <input id="search" className="h-10 w-[100% - 40px] grow bg-gray-100 p-3 rounded-xl mx-5" placeholder="Search Packages..."></input>
-            <button className="grow-0 h-10 w-40 bg-blue-100 p-3 mx-5 rounded-xl hover:bg-blue-200">Packages</button>
-            <button className="grow-0 h-10 w-40 bg-blue-100 p-3 mx-5 rounded-xl hover:bg-blue-200">More Stuff</button>  
-            <button className="grow-0 h-10 w-40 bg-blue-100 p-3 mx-5 rounded-xl hover:bg-blue-200">Even More Stuff</button>
-          </div>
-        </nav>
-        <div className="h-screen grid grid-cols-12 gap-0">
-          <div className="col-span-1 bg-white overflow-y-scroll overflow-x-hidden [scrollbar-width:none]">
-            <PackageList packages={result} />
-          </div>
-          <div className="col-span-11 bg-gray-300 w-full"></div>
-        </div>
-        
-      </div>
-      
+      <PackageBrowser packages={result}/>
     )
   }
   

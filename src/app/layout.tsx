@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-black w-screen h-screen">
+      <body className="bg-black w-screen h-screen m-0 overflow-hidden">
         <Auth0Provider>
           {children}
         </Auth0Provider>

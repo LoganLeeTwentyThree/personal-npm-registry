@@ -63,7 +63,7 @@ export async function PUT(
 
         const newVersionObj : PackageVersionObject = {
             name : body.name,
-            version: body.versions[Object.keys(body.versions).at(-1)!].version ,
+            version: body.versions[Object.keys(body.versions).at(-1)!].version,
             dist: body.versions[Object.keys(body.versions).at(-1)!].dist
         }
 
@@ -89,6 +89,7 @@ export async function GET(
         { params }: { params: Promise<{ packagename: string }> },
     ) {
     const name = (await params).packagename;
+    
 
     dotenv.config({ path: '../../.env.local' })
     const uri = process.env.DATABASE_STRING;
@@ -102,6 +103,7 @@ export async function GET(
 
         const response : PackageRoot = await test.findOne({name: name});
 
+
         if (response != null)
         {
             return new Response(JSON.stringify( response ), {
@@ -111,17 +113,28 @@ export async function GET(
             );
         }else
         {
+            
+            if(request.headers.get('npm-command') != 'publish')
+            {
+                //go get package from npm registry...
+                //TODO: Strict mode (doesn't get packages from other registries) 
+                let otherResponse = await fetch("https://registry.npmjs.org/" + name)
 
-            //go get package from npm registry...
-            //TODO: Strict mode (doesn't get packages from other registries) 
-            let otherResponse = await fetch("https://registry.npmjs.org/" + name)
-
-            return new Response(otherResponse.body, {
-                status: otherResponse.status,
-                headers: {
-                'content-type': 'application/json'
-                }
-            });
+                return new Response(otherResponse.body, {
+                    status: otherResponse.status,
+                    headers: {
+                    'content-type': 'application/json'
+                    }
+                });
+            }else
+            {
+                return new Response(JSON.stringify( {"Error": "Not Found"} ), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                    ,}
+                );
+            }
+            
             
         }
          
