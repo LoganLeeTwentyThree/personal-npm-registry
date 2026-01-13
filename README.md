@@ -7,7 +7,7 @@ There are a few prerequisites for setting up the server.
 2. AWS s3 credentials - The server stores package tarballs in an s3 bucket.
 3. Auth0 - The server relies on auth0 for user authentication  
   
-### Steps
+### Setup Steps
 1. Clone this repository  
 `git clone https://github.com/LoganLeeTwentyThree/personal-npm-registry`
 2. Create `.env.local` in the root of the project
@@ -26,7 +26,9 @@ There are a few prerequisites for setting up the server.
      - APP_BASE_URL (likely "http://localhost:3000")
 3. Run dev server  
 `npm run dev`
-4. Set the server as your registry on npm  
+
+### Use With npm
+Set the server as your registry on npm  
 `npm config set registry <SERVER-IP>`
 
 ## Features
