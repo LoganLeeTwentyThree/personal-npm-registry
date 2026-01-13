@@ -8,12 +8,8 @@ export type LoginButtonParams = {
 
 export default function LoginButton(params : LoginButtonParams) {
     setCookie('id', params.id , { maxAge: 60 * 10 }) //10 minutes
+    window.location.replace("/auth/login")
     return (
-        <a
-            href="/auth/login"
-            className="bg-white"
-        >
-            Log In
-        </a>
+        <div></div>
     );
 }
