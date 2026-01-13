@@ -24,7 +24,9 @@ There are a few prerequisites for setting up the server.
      - Additionally, login with the [aws cli](https://aws.amazon.com/cli/)
    - Other
      - APP_BASE_URL (likely "http://localhost:3000")
-3. Run dev server  
+3. Install dependencies
+`npm install`  
+4. Run dev server  
 `npm run dev`
 
 ### Use With npm
