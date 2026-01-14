@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 
 
@@ -19,13 +19,13 @@ export async function GET(
         );
 
         
-        return new Response(upstream.body, {
+        return new NextResponse(upstream.body, {
             status: upstream.status,
             headers: upstream.headers
         });
         
     }catch {
-        return new Response('Package not found', { status: 404 })
+        return new NextResponse('Package not found', { status: 404 })
     }
     
 

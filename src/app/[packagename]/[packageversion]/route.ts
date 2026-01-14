@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
 import dotenv from 'dotenv'
 import { Timestamp } from 'mongodb';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { PackageVersionObject } from '@/types';
 
 
@@ -27,24 +27,24 @@ export async function GET(
 
         if (response != null)
         {
-            return new Response(JSON.stringify( response ), {
+            return new NextResponse(JSON.stringify( response ), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
                 ,}
-            );
+            )
         }else
         {
-            return new Response(JSON.stringify( {error: "Not found", reason: "Package with name '" + name + "' and version '" + version + "' not found"} ), {
+            return new NextResponse(JSON.stringify( {error: "Not found", reason: "Package with name '" + name + "' and version '" + version + "' not found"} ), {
                 status: 404,
                 headers: { 'Content-Type': 'application/json' }
-            ,});
+            ,})
         }
          
     } catch {
-        return new Response(JSON.stringify( {error: "Database Error"} )), {
+        return new NextResponse(JSON.stringify( {error: "Database Error"} ), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
-        ,}
+        ,})
     }finally {
         await client.close();
     }

@@ -1,12 +1,10 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dotenv from 'dotenv'
 import { randomUUID } from "crypto";
 const { MongoClient } = require('mongodb');
 
 export async function POST(
-request: NextRequest,
-    { params }: { params: Promise<{ packagename: string, packageversion: string }> },
-)
+request: NextRequest)
 {
     dotenv.config({ path: '../../../.env.local' })
     const url = process.env.APP_BASE_URL
@@ -26,14 +24,14 @@ request: NextRequest,
     }
 
 
-    return new Response(JSON.stringify({
-                "loginUrl": url + "/?id=" + token,
-                "doneUrl": url + "/auth/" + token +"/done"}), 
-            {
-                status: 200,
-                headers: { 
-                "Content-Type" : "application/json"
-                },
-            }
-        );
+    return new NextResponse(JSON.stringify({
+          "loginUrl": url + "/?id=" + token,
+          "doneUrl": url + "/auth/" + token +"/done"}), 
+      {
+          status: 200,
+          headers: { 
+          "Content-Type" : "application/json"
+          }
+      }
+  );
 }

@@ -1,6 +1,6 @@
 const { MongoClient } = require('mongodb');
 import dotenv from 'dotenv'
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { PackageRoot, PackageVersionObject } from '@/types';
 import { headers } from 'next/headers';
 import { generateTokenFromUUID, getUserByToken, insertPackageMetaData } from '@/lib/database';
@@ -70,14 +70,14 @@ export async function PUT(
         //upload metadata to mongo here
         await insertPackageMetaData(packageRoot, newVersionObj)
         
-        return new Response(JSON.stringify( {ok: true} ), {
+        return new NextResponse(JSON.stringify( {ok: true} ), {
             status: 201,
             headers: { 'Content-Type': 'application/json' }
         ,})
 
     }else
     {
-        return new Response(JSON.stringify( {error: "Unauthorized"} ), {
+        return new NextResponse(JSON.stringify( {error: "Unauthorized"} ), {
             status: 401,
             headers: { 'Content-Type': 'application/json' }
         ,})
@@ -106,11 +106,11 @@ export async function GET(
 
         if (response != null)
         {
-            return new Response(JSON.stringify( response ), {
+            return new NextResponse(JSON.stringify( response ), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
-                ,}
-            );
+                }
+            )
         }else
         {
             
@@ -119,29 +119,29 @@ export async function GET(
                 //go get package from npm registry...
                 let otherResponse = await fetch("https://registry.npmjs.org/" + name)
 
-                return new Response(otherResponse.body, {
+                return new NextResponse(otherResponse.body, {
                     status: otherResponse.status,
                     headers: {
-                    'content-type': 'application/json'
+                    'Content-type': 'application/json'
                     }
-                });
+                })
             }else
             {
-                return new Response(JSON.stringify( {"Error": "Not Found"} ), {
+                return new NextResponse(JSON.stringify( {"Error": "Not Found"} ), {
                     status: 404,
                     headers: { 'Content-Type': 'application/json' }
-                    ,}
-                );
+                    }
+                )
             }
             
             
         }
          
     } catch {
-        return new Response(JSON.stringify( {error: "Database Error"} )), {
+        return new NextResponse(JSON.stringify( {error: "Database Error"} ), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
-        ,}
+        })
     }finally {
         await client.close();
     }

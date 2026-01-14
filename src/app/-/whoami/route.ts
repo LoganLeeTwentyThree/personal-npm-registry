@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import dotenv from 'dotenv'
 const { MongoClient } = require('mongodb');
 import { headers } from 'next/headers';
@@ -21,7 +21,7 @@ request: NextRequest,
         const user = await getUserByToken(token)
         if( user != null)
         {
-            return new Response(JSON.stringify({"username" : user.name }), 
+            return new NextResponse(JSON.stringify({"username" : user.name }), 
             {
                 status: 200,
                 headers: { "Content-Type": "application/json" },
@@ -29,7 +29,7 @@ request: NextRequest,
 
         }else
         {
-            return new Response(JSON.stringify({"Error" : "User Not Found"}), 
+            return new NextResponse(JSON.stringify({"Error" : "User Not Found"}), 
             {
                 status: 401,
                 headers: { },
@@ -38,23 +38,11 @@ request: NextRequest,
         }
     }else
     {
-        return new Response(JSON.stringify({}), 
+        return new NextResponse(JSON.stringify({}), 
         {
             status: 400,
             headers: { },
         }
     );
     }
-        
-    
-
-
-    return new Response(JSON.stringify({}), 
-            {
-                status: 200,
-                headers: { 
-                "Content-Type" : "application/json"
-                },
-            }
-        );
 }

@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import dotenv from 'dotenv'
 
@@ -18,10 +18,10 @@ export async function GET(
         );
 
         if (!res.Body) {
-            return new Response(null, { status: 404 });
+            return new NextResponse(JSON.stringify({}), { status: 404 });
         }
 
-        return new Response(res.Body as ReadableStream, {
+        return new NextResponse(res.Body as ReadableStream, {
             status: 200,
             headers: {
                 'Content-Type': 'application/octet-stream'
@@ -32,7 +32,7 @@ export async function GET(
         dotenv.config({path: '/../../../../../.env.local'})
         if (process.env.STRICT == "true")
         {
-            return new Response('Package not found', { status: 404 })
+            return new NextResponse('Package not found', { status: 404 })
         }
         
         try {
@@ -41,15 +41,13 @@ export async function GET(
             );
 
             
-            return new Response(upstream.body, {
+            return new NextResponse(upstream.body, {
                 status: upstream.status,
-                headers: {
-                    'Content-Type': 'application/octet-stream'
-                }
+                headers: upstream.headers
             });
             
         }catch {
-            return new Response('Package not found', { status: 404 })
+            return new NextResponse(JSON.stringify({"Error": 'Package not found'}), { status: 404 })
         }
     }
 
