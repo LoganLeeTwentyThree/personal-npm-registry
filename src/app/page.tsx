@@ -28,21 +28,15 @@ export default async function Home({
     const client = new MongoClient(uri);
 
     try {
-
-
-      //update temp-uuid so that npm can get its token
+      // try to update temp-uuid so that npm can get its token
       const check = await client.db('private-npm').collection('temp-uuids').updateOne({token: cookieStore.get("id")?.value, status: "pending"}, { $set: { status: "complete"}})
-
+      
+      //if there was a matching temp-uuid, insert the new user into the db
       if(check.modifiedCount == 1)
       {
         //try to insert new user into db 
         await insertUser(cookieStore.get("id")?.value, user.name, user)
       }
-
-      
-
-      
-
     } finally {
       await client.close();
     }
