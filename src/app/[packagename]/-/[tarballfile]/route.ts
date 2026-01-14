@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
-import { GetObjectCommand, NoSuchKey, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import dotenv from 'dotenv'
 
 export async function GET(
   _request: NextRequest,
@@ -28,6 +29,12 @@ export async function GET(
         });
 
     } catch {
+        dotenv.config({path: '/../../../../../.env.local'})
+        if (process.env.STRICT == "true")
+        {
+            return new Response('Package not found', { status: 404 })
+        }
+        
         try {
             const upstream = await fetch(
                 `https://registry.npmjs.org/${packagename}/-/${tarballfile}`

@@ -114,10 +114,9 @@ export async function GET(
         }else
         {
             
-            if(request.headers.get('npm-command') != 'publish')
+            if(request.headers.get('npm-command') != 'publish' && process.env.STRICT == "false")
             {
                 //go get package from npm registry...
-                //TODO: Strict mode (doesn't get packages from other registries) 
                 let otherResponse = await fetch("https://registry.npmjs.org/" + name)
 
                 return new Response(otherResponse.body, {
