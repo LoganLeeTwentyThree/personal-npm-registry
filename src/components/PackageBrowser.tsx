@@ -16,6 +16,7 @@ export default function PackageBrowser( {packages} : PackageBrowserProps)
     const [selectedPackage, setSelectedPackage] = useState<PackageRoot | null>(null)
     const [searchField, setSearchField] = useState("")
 
+    console.log(selectedPackage)
     return (
         <div className='h-full'>
             <div className="bg-white h-fit border-b border-default">

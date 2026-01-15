@@ -22,70 +22,56 @@ export async function PUT(
     const user = await getUserByToken(token)
 
     //valid request
-    //TODO: contributor authorization
     if( user != undefined && user != null)
     {
         dotenv.config({ path: '../../.env.local' })
 
         const body = await request.json(); 
 
-        //check integrity
-        const [filename, attachment] = Object.entries(body._attachments)[0] as [
-            string,
-            { content_type: string, data: string }
-        ];
-        const tarball = Buffer.from(attachment.data, 'base64');
-
-        const actual = crypto
-        .createHash('sha1')
-        .update(tarball)
-        .digest('hex');
-
-        if (actual !== body.versions[Object.keys(body.versions).at(-1)!].dist.shasum) {
-            throw new Error('Tarball integrity check failed');
-        }
-
-        const exists = await getPackageRoot(body.name)
-
-        if(exists != null)//check authorization
+        if( headersList.get('npm-command') == 'publish')
         {
-            
-            if (!exists.maintainers.includes(token))
-            {
-                return new NextResponse(JSON.stringify( {"Error" : "Not Authorized"} ), {
-                    status: 401,
-                    headers: { 'Content-Type': 'application/json' }
-                })
+            //check integrity
+            const [filename, attachment] = Object.entries(body._attachments)[0] as [
+                string,
+                { content_type: string, data: string }
+            ];
+            const tarball = Buffer.from(attachment.data, 'base64');
+
+            const actual = crypto
+            .createHash('sha1')
+            .update(tarball)
+            .digest('hex');
+
+            if (actual !== body.versions[Object.keys(body.versions).at(-1)!].dist.shasum) {
+                throw new Error('Tarball integrity check failed');
             }
+
+            //upload to s3 here
+            const bucketName = process.env.S3_BUCKET
+            const s3_client = new S3Client({ });
+            const command = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: filename,
+                Body: tarball,
+            });        
             
-
+            await s3_client.send(command)
         }
-
-        //upload to s3 here
-        const bucketName = process.env.S3_BUCKET
-        const s3_client = new S3Client({ });
-        const command = new PutObjectCommand({
-            Bucket: bucketName,
-            Key: filename,
-            Body: tarball,
-        });        
         
-        await s3_client.send(command)
 
-        const packageRoot : PackageRoot = {
-            name: body.name, 
-            versions: body.versions,
-            maintainers: [token]
+        const exists = await (await getPackageRoot(body.name, headersList.get('npm-command')!)).json()
+       
+        if (exists.ok && !exists.maintainers.includes(token))//check authorization
+        {
+            return new NextResponse(JSON.stringify( {"Error" : "Not Authorized"} ), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+            })
         }
 
-        const newVersionObj : PackageVersionObject = {
-            name : body.name,
-            version: body.versions[Object.keys(body.versions).at(-1)!].version,
-            dist: body.versions[Object.keys(body.versions).at(-1)!].dist
-        }
-
+        const { _attachments, access, ...packageRootBody} = body
         //upload metadata to mongo here
-        await insertPackageMetaData(packageRoot, newVersionObj)
+        await insertPackageMetaData(packageRootBody, token)
         
         return new NextResponse(JSON.stringify( {ok: true} ), {
             status: 201,
@@ -105,64 +91,10 @@ export async function GET(
     request: NextRequest,
         { params }: { params: Promise<{ packagename: string }> },
     ) {
-    const name = (await params).packagename;
-    
+    const name = (await params).packagename
+    const headersList = await headers()
 
-    dotenv.config({ path: '../../.env.local' })
-    const uri = process.env.DATABASE_STRING;
-
-    const client = new MongoClient(uri);
-    
-
-    try {
-        const database = client.db('private-npm');
-        const test = database.collection('package-roots');
-
-        const response = await test.findOne({name: name});
-
-
-        if (response != null)
-        {
-            const { maintainers, ...responseWithoutMaintainers } = response;
-            return new NextResponse(JSON.stringify( {_rev : response._id, ...responseWithoutMaintainers } ), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-                }
-            )
-        }else
-        {
-            
-            if(request.headers.get('npm-command') != 'publish' && process.env.STRICT == "false")
-            {
-                //go get package from npm registry...
-                let otherResponse = await fetch("https://registry.npmjs.org/" + name)
-
-                return new NextResponse(otherResponse.body, {
-                    status: otherResponse.status,
-                    headers: {
-                    'Content-type': 'application/json'
-                    }
-                })
-            }else
-            {
-                return new NextResponse(JSON.stringify( {"Error": "Not Found"} ), {
-                    status: 404,
-                    headers: { 'Content-Type': 'application/json' }
-                    }
-                )
-            }
-            
-            
-        }
-         
-    } catch {
-        return new NextResponse(JSON.stringify( {error: "Database Error"} ), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        })
-    }finally {
-        await client.close();
-    }
+    return getPackageRoot(name, headersList.get('npm-command')!)
 
     
 }

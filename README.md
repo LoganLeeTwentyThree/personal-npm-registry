@@ -35,14 +35,15 @@ Set the server as your registry on npm
 
 ## Features
 ### Working
-`login`  
-`publish`  
-`unpublish`  
-`install`
+`npm login`  
+`npm publish`  
+`npm unpublish`  
+`npm install`
+`npm deprecate`
+User Authorization
   
 ### In Development  
 Frontend Package Browser  
-Authorization
 
 ### Planned
 - all the other npm commands

@@ -64,7 +64,7 @@ export default async function Home({
       result = result.map((e : PackageRoot) => {
         return {
           name: e.name,
-          versions: e.versions
+          versions: e.versions,
         }
       });
     } finally {

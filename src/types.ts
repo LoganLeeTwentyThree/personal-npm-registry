@@ -13,7 +13,9 @@ export type PackageRoot = {
     versions : {[version : string] : PackageVersionObject},
     mtime? : Timestamp,
     ctime? : Timestamp,
-    maintainers? : Array<String>,
-    repository? : String,
-    description? : String
+    maintainers? : Array<string>,
+    repository? : string,
+    description? : string
+    dist_tags? : {next : string, latest: string}
+    deprecated? : string
 }
