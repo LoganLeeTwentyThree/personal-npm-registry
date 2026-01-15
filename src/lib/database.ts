@@ -4,6 +4,18 @@ import { User } from '@auth0/nextjs-auth0/types';
 import dotenv from 'dotenv'
 import { PackageRoot,PackageVersionObject } from '@/types';
 
+export async function getPackageRoot(name : string)
+{
+    dotenv.config({ path: '../.env.local' })
+    const uri = process.env.DATABASE_STRING;
+    const client = new MongoClient(uri);
+    const database = client.db('private-npm');
+    const test = database.collection('package-roots');
+
+    const result = await test.findOne({name: name});
+    return result
+}
+
 //get database token
 export function generateTokenFromUUID(uuid : string | undefined)
 {
@@ -40,7 +52,7 @@ export async function getUserByToken( token : string | undefined )
     }
 }
 
-export async function insertUser( uuid : string | undefined, name : string | undefined, user : User )
+export async function insertUser( uuid : string | undefined, user : User )
 {
     dotenv.config({ path: '../.env.local' })
     const uri = process.env.DATABASE_STRING;
@@ -58,7 +70,8 @@ export async function insertUser( uuid : string | undefined, name : string | und
             {
                 token: token,
                 uuid: user.sub, 
-                name: name, 
+                name: user.name,
+                email: user.email, 
                 createdAt: new Date()
             })
         }finally 
@@ -83,13 +96,11 @@ export async function insertPackageMetaData( packageRoot : PackageRoot, versionO
 
         if (root == null) //new package
         {
-            
-
             await database.collection('package-roots').insertOne(packageRoot)
 
         }else //existing package
         {
-            await database.collection('package-roots').update({name:packageRoot.name}, {$set : { versions: versionObj }})
+            await database.collection('package-roots').updateOne({name:packageRoot.name}, {$set : { versions: versionObj }})
         }
 
         await database.collection('package-version-objs').insertOne(versionObj)

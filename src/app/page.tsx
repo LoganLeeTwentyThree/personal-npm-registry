@@ -35,7 +35,7 @@ export default async function Home({
       if(check.modifiedCount == 1)
       {
         //try to insert new user into db 
-        await insertUser(cookieStore.get("id")?.value, user.name, user)
+        await insertUser(cookieStore.get("id")?.value, user)
       }
     } finally {
       await client.close();

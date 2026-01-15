@@ -65,7 +65,7 @@ export default function PackageBrowser( {packages} : PackageBrowserProps)
                         
                         <div className="p-5">
                             <div className="text-3xl pb-2">Versions</div>
-                            <div className='text-xl'>{Object.keys(selectedPackage?.versions!).map((e, i) => (<div key={i}>{e}</div>))}</div>
+                            <div className='text-xl'>{Object.keys(selectedPackage.versions).map((e, i) => (<div key={i}>{e}</div>))}</div>
                         </div>
                     </div>}
                     

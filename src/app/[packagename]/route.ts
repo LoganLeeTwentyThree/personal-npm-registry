@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import { NextRequest, NextResponse } from 'next/server';
 import { PackageRoot, PackageVersionObject } from '@/types';
 import { headers } from 'next/headers';
-import { generateTokenFromUUID, getUserByToken, insertPackageMetaData } from '@/lib/database';
+import { generateTokenFromUUID, getPackageRoot, getUserByToken, insertPackageMetaData } from '@/lib/database';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 const crypto = require('crypto');
 
@@ -19,11 +19,11 @@ export async function PUT(
     const uuid = bearer?.split(" ")[1]
 
     const token = await generateTokenFromUUID(uuid)
-    const validToken = await getUserByToken(token)
+    const user = await getUserByToken(token)
 
     //valid request
     //TODO: contributor authorization
-    if( validToken != undefined && validToken != null)
+    if( user != undefined && user != null)
     {
         dotenv.config({ path: '../../.env.local' })
 
@@ -45,6 +45,22 @@ export async function PUT(
             throw new Error('Tarball integrity check failed');
         }
 
+        const exists = await getPackageRoot(body.name)
+
+        if(exists != null)//check authorization
+        {
+            
+            if (!exists.maintainers.includes(token))
+            {
+                return new NextResponse(JSON.stringify( {"Error" : "Not Authorized"} ), {
+                    status: 401,
+                    headers: { 'Content-Type': 'application/json' }
+                })
+            }
+            
+
+        }
+
         //upload to s3 here
         const bucketName = process.env.S3_BUCKET
         const s3_client = new S3Client({ });
@@ -54,11 +70,12 @@ export async function PUT(
             Body: tarball,
         });        
         
-        let response = await s3_client.send(command)
+        await s3_client.send(command)
 
         const packageRoot : PackageRoot = {
             name: body.name, 
             versions: body.versions,
+            maintainers: [token]
         }
 
         const newVersionObj : PackageVersionObject = {
@@ -106,7 +123,8 @@ export async function GET(
 
         if (response != null)
         {
-            return new NextResponse(JSON.stringify( {_rev : response._id, ...response } ), {
+            const { maintainers, ...responseWithoutMaintainers } = response;
+            return new NextResponse(JSON.stringify( {_rev : response._id, ...responseWithoutMaintainers } ), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
                 }
