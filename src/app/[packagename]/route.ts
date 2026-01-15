@@ -9,10 +9,11 @@ const crypto = require('crypto');
 
 export async function PUT(
     request: NextRequest,
-        { params }: { params: Promise<{ }> },
+        { params }: { params: Promise<{ packagename: string }> },
     )
 {
-    const headersList = await headers();
+    const packageName = (await params).packagename
+    const headersList = await headers()
 
     const bearer = headersList.get('authorization')
     const uuid = bearer?.split(" ")[1]
@@ -25,7 +26,6 @@ export async function PUT(
     if( validToken != undefined && validToken != null)
     {
         dotenv.config({ path: '../../.env.local' })
-        
 
         const body = await request.json(); 
 
@@ -101,12 +101,12 @@ export async function GET(
         const database = client.db('private-npm');
         const test = database.collection('package-roots');
 
-        const response : PackageRoot = await test.findOne({name: name});
+        const response = await test.findOne({name: name});
 
 
         if (response != null)
         {
-            return new NextResponse(JSON.stringify( response ), {
+            return new NextResponse(JSON.stringify( {_rev : response._id, ...response } ), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' }
                 }

@@ -37,7 +37,9 @@ Set the server as your registry on npm
 ### Working
 `login`  
 `publish`  
-`install`  
+`unpublish`
+`install`
+
   
 ### In Development  
 Frontend Package Browser
