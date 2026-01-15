@@ -41,7 +41,7 @@ Set the server as your registry on npm
 `install`
   
 ### In Development  
-Frontend Package Browser
+Frontend Package Browser  
 Authorization
 
 ### Planned
