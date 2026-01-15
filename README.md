@@ -37,12 +37,12 @@ Set the server as your registry on npm
 ### Working
 `login`  
 `publish`  
-`unpublish`
+`unpublish`  
 `install`
-
   
 ### In Development  
 Frontend Package Browser
+Authorization
 
 ### Planned
 - all the other npm commands
