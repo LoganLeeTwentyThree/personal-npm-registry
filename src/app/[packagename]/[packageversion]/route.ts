@@ -1,8 +1,4 @@
-const { MongoClient } = require('mongodb');
-import dotenv from 'dotenv'
-import { Timestamp } from 'mongodb';
 import { NextRequest, NextResponse } from 'next/server';
-import { PackageRoot, PackageVersionObject } from '@/types';
 import { getPackageRoot } from '@/lib/database';
 
 

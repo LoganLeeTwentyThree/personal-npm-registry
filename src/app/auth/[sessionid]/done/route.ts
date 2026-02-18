@@ -1,8 +1,5 @@
 import { NextRequest } from "next/server";
-import dotenv from 'dotenv'
-import { randomUUID } from "crypto";
 const { MongoClient } = require('mongodb');
-import { auth0 } from "@/lib/auth0";
 
 type UUIDRecord = {
     uuid: String,
@@ -15,7 +12,6 @@ export async function GET(
     )
     {
 
-    dotenv.config({ path: '../../../.env.local' })
     const uri = process.env.DATABASE_STRING;
 
     const client = new MongoClient(uri);
@@ -33,7 +29,7 @@ export async function GET(
 
     
 
-    if(result == null)
+    if(!result)
     {
         return new Response(JSON.stringify({}), {
             status: 404,

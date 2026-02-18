@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import dotenv from 'dotenv'
+import { headers } from "next/headers";
 import { randomUUID } from "crypto";
 const { MongoClient } = require('mongodb');
 
 export async function POST(
 request: NextRequest)
 {
-    dotenv.config({ path: '../../../.env.local' })
-    const url = process.env.APP_BASE_URL
+
     const token = "npm_" + randomUUID();
 
     const uri = process.env.DATABASE_STRING;
@@ -23,6 +22,9 @@ request: NextRequest)
       await client.close();
     }
 
+    const headersList = await headers()
+    const url = `http://${headersList.get("host") ?? "npm-registry:8000"}`
+    console.log(url)
 
     return new NextResponse(JSON.stringify({
           "loginUrl": url + "/?id=" + token,

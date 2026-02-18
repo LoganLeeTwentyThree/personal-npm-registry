@@ -1,16 +1,12 @@
 const crypto = require('crypto');
 const { MongoClient } = require('mongodb');
-import { User } from '@auth0/nextjs-auth0/types';
-import dotenv from 'dotenv'
 import { PackageRoot } from '@/types';
 import { DeleteObjectCommand, DeleteObjectsCommand, S3Client } from '@aws-sdk/client-s3';
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { deprecate } from 'util';
 
 export async function getPackageRoot(name : string, command : string)
 {
-    dotenv.config({ path: '../.env.local' })
     const uri = process.env.DATABASE_STRING
 
     const client = new MongoClient(uri)
@@ -66,7 +62,7 @@ export async function getPackageRoot(name : string, command : string)
     }
 }
 
-//get database token
+//get hashed npm token
 export function generateTokenFromUUID(uuid : string | undefined)
 {
     if (uuid == undefined)
@@ -79,7 +75,7 @@ export function generateTokenFromUUID(uuid : string | undefined)
     return digest
 }
 
-//retrieve a user by its database token
+//retrieve a user by its hashed npm token
 export async function getUserByToken( token : string | undefined ) 
 {
     if( token == undefined )
@@ -87,7 +83,6 @@ export async function getUserByToken( token : string | undefined )
         return null
     }
 
-    dotenv.config({ path: '../.env.local' })
     const uri = process.env.DATABASE_STRING;
     const client = new MongoClient(uri);
     try {
@@ -102,15 +97,34 @@ export async function getUserByToken( token : string | undefined )
     }
 }
 
-export async function insertUser( uuid : string | undefined, user : User )
+export async function getUserByCredentials( email : string, password : string)
 {
-    dotenv.config({ path: '../.env.local' })
+    const uri = process.env.DATABASE_STRING;
+    const client = new MongoClient(uri);
+    const database = client.db('private-npm');
+    const users = database.collection('users')
+
+    const hash = crypto.createHash('sha256')
+    hash.update(password)
+    const digest = hash.digest('hex')
+    
+    let result = users.findOne({ email: email, password: digest})
+    return result
+}
+
+
+export async function insertUser( uuid : string | undefined, email : string, password : string )
+{
     const uri = process.env.DATABASE_STRING;
     const client = new MongoClient(uri);
     const database = client.db('private-npm');
 
     const token = generateTokenFromUUID(uuid)
     const dbuser = await getUserByToken(token)
+
+    const hash = crypto.createHash('sha256')
+    hash.update(password)
+    const digest = hash.digest('hex')
 
     if ( dbuser == null && token != "invalid uuid") //no duplicate users
     {
@@ -119,9 +133,8 @@ export async function insertUser( uuid : string | undefined, user : User )
             await database.collection('npm-tokens').insertOne(
             {
                 token: token,
-                uuid: user.sub, 
-                name: user.name,
-                email: user.email, 
+                email: email, 
+                password: digest,
                 createdAt: new Date()
             })
         }finally 
@@ -132,9 +145,33 @@ export async function insertUser( uuid : string | undefined, user : User )
     }
 }
 
+export async function setPendingToComplete( uuid: string )
+{
+    const uri = process.env.DATABASE_STRING;
+    const client = new MongoClient(uri);
+    const database = client.db('private-npm');
+    const tempUUIDS = database.collection('temp-uuids')
+
+    console.log(uuid)
+        
+    try {
+        await tempUUIDS.updateOne(
+        {
+            token: uuid
+        },
+        {
+            $set: {status: "complete"}
+        })
+    }finally 
+    {
+        await client.close();
+    }
+        
+    
+}
+
 export async function insertPackageMetaData( packageRoot : PackageRoot, token : string )
 {
-    dotenv.config({ path: '../.env.local' })
     const uri = process.env.DATABASE_STRING;
     const client = new MongoClient(uri);
 
@@ -174,7 +211,6 @@ export async function insertPackageMetaData( packageRoot : PackageRoot, token : 
 
 export async function deletePackageMetaData(name : string, token : string)
 {
-    dotenv.config({ path: '../../../.env.local' })
     const uri = process.env.DATABASE_STRING;
 
     const client = new MongoClient(uri);
@@ -239,7 +275,6 @@ export async function deletePackageMetaData(name : string, token : string)
 
 export async function modifyPackage(newRoot : PackageRoot, token : string)
 {
-    dotenv.config({ path: '../../../.env.local' })
     const uri = process.env.DATABASE_STRING;
 
     const client = new MongoClient(uri);
@@ -282,7 +317,6 @@ export async function modifyPackage(newRoot : PackageRoot, token : string)
 
 export async function deletePackageTarball(filename : string, token : string)
 {
-    dotenv.config({ path: '../../../.env.local' })
     const uri = process.env.DATABASE_STRING;
 
     const client = new MongoClient(uri);

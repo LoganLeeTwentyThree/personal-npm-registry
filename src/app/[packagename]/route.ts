@@ -1,5 +1,4 @@
 const { MongoClient } = require('mongodb');
-import dotenv from 'dotenv'
 import { NextRequest, NextResponse } from 'next/server';
 import { PackageRoot, PackageVersionObject } from '@/types';
 import { headers } from 'next/headers';
@@ -24,7 +23,6 @@ export async function PUT(
     //valid request
     if( user != undefined && user != null)
     {
-        dotenv.config({ path: '../../.env.local' })
 
         const body = await request.json(); 
 

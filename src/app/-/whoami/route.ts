@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import dotenv from 'dotenv'
 const { MongoClient } = require('mongodb');
 import { headers } from 'next/headers';
 const crypto = require('crypto');
