@@ -1,6 +1,4 @@
-const { MongoClient } = require('mongodb');
 import { NextRequest, NextResponse } from 'next/server';
-import { PackageRoot, PackageVersionObject } from '@/types';
 import { headers } from 'next/headers';
 import { hash, getPackageRoot, getUserByToken, insertPackageMetaData } from '@/lib/database';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';

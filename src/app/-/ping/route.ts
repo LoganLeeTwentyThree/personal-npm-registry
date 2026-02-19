@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getPackageRoot } from "@/lib/database";
 
 export async function GET(
 request: NextRequest
