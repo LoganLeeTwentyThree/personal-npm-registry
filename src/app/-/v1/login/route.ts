@@ -24,7 +24,6 @@ request: NextRequest)
 
     const headersList = await headers()
     const url = `http://${headersList.get("host") ?? "npm-registry:8000"}`
-    console.log(url)
 
     return new NextResponse(JSON.stringify({
           "loginUrl": url + "/?id=" + token,

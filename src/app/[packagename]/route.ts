@@ -2,7 +2,7 @@ const { MongoClient } = require('mongodb');
 import { NextRequest, NextResponse } from 'next/server';
 import { PackageRoot, PackageVersionObject } from '@/types';
 import { headers } from 'next/headers';
-import { generateTokenFromUUID, getPackageRoot, getUserByToken, insertPackageMetaData } from '@/lib/database';
+import { hash, getPackageRoot, getUserByToken, insertPackageMetaData } from '@/lib/database';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 const crypto = require('crypto');
 
@@ -17,7 +17,7 @@ export async function PUT(
     const bearer = headersList.get('authorization')
     const uuid = bearer?.split(" ")[1]
 
-    const token = await generateTokenFromUUID(uuid)
+    const token = await hash(uuid ?? "")
     const user = await getUserByToken(token)
 
     //valid request
@@ -33,6 +33,7 @@ export async function PUT(
                 string,
                 { content_type: string, data: string }
             ];
+
             const tarball = Buffer.from(attachment.data, 'base64');
 
             const actual = crypto
@@ -57,9 +58,9 @@ export async function PUT(
         }
         
 
-        const exists = await (await getPackageRoot(body.name, headersList.get('npm-command')!)).json()
+        const exists = await getPackageRoot(packageName, "publish")
        
-        if (exists.ok && !exists.maintainers.includes(token))//check authorization
+        if (!exists || exists.maintainers?.includes(token))//check authorization
         {
             return new NextResponse(JSON.stringify( {"Error" : "Not Authorized"} ), {
                 status: 401,
@@ -92,7 +93,22 @@ export async function GET(
     const name = (await params).packagename
     const headersList = await headers()
 
-    return getPackageRoot(name, headersList.get('npm-command')!)
+    const pack = await getPackageRoot(name, headersList.get('npm-command')!)
+
+    if(pack)
+    {
+        return new NextResponse(JSON.stringify(pack),
+        {
+            status: 200,
+            headers: {}
+        })
+    }
+
+    return new NextResponse("Not found",
+    {
+        status: 404,
+        headers: {}
+    })
 
     
 }

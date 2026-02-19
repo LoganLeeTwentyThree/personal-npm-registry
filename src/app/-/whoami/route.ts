@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-const { MongoClient } = require('mongodb');
 import { headers } from 'next/headers';
-const crypto = require('crypto');
-import { generateTokenFromUUID, getUserByToken } from "@/lib/database";
+import { hash, getUserByToken } from "@/lib/database";
 
 export async function GET(
 request: NextRequest,
@@ -14,34 +12,32 @@ request: NextRequest,
 
     let uuid = bearer?.split(" ")[1]
 
-    if( uuid != null)
-    {
-        const token = generateTokenFromUUID(uuid)
-        const user = await getUserByToken(token)
-        if( user != null)
-        {
-            return new NextResponse(JSON.stringify({"username" : user.name }), 
-            {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-            })
-
-        }else
-        {
-            return new NextResponse(JSON.stringify({"Error" : "User Not Found"}), 
-            {
-                status: 401,
-                headers: { },
-            }
-            );
-        }
-    }else
+    if( !uuid )
     {
         return new NextResponse(JSON.stringify({}), 
         {
             status: 400,
-            headers: { },
+            headers: { "Content-Type": "application/json"  },
         }
-    );
+        );
     }
+
+    const token = hash(uuid)
+    const user = await getUserByToken(token)
+    if( !user )
+    {
+        return new NextResponse(JSON.stringify({"Error" : "User Not Found"}), 
+            {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
+            }
+        );
+    }
+
+    return new NextResponse(JSON.stringify({"email" : user.email }), 
+    {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+    })
+    
 }

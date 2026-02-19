@@ -1,4 +1,4 @@
-import { deletePackageMetaData, generateTokenFromUUID, modifyPackage } from '@/lib/database';
+import { deletePackageMetaData, hash, modifyPackage } from '@/lib/database';
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -15,7 +15,7 @@ export async function DELETE(
     const bearer = headersList.get('authorization')
     const uuid = bearer?.split(" ")[1]
 
-    const token = generateTokenFromUUID(uuid)
+    const token = hash(uuid ?? "")
     
     return await deletePackageMetaData(packageName, token)
 }
@@ -31,7 +31,7 @@ export async function PUT(
     const bearer = headersList.get('authorization')
     const uuid = bearer?.split(" ")[1]
 
-    const token = generateTokenFromUUID(uuid)
+    const token = hash(uuid ?? "")
     
     const body = await request.json();     
     return await modifyPackage(body, token)

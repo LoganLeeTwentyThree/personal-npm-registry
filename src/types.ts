@@ -16,6 +16,13 @@ export type PackageRoot = {
     maintainers? : Array<string>,
     repository? : string,
     description? : string
-    dist_tags? : {next : string, latest: string}
+    dist_tags? : {[tag : string] : string}
     deprecated? : string
+}
+
+export type User = {
+    token : string,
+    email : string,
+    password: string,
+    createdAt: Date
 }

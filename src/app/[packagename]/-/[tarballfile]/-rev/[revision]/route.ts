@@ -1,4 +1,4 @@
-import { deletePackageTarball, generateTokenFromUUID } from "@/lib/database"
+import { deletePackageTarball, hash } from "@/lib/database"
 import { headers } from "next/headers"
 import { NextRequest } from "next/server"
 
@@ -14,7 +14,7 @@ export async function DELETE(
     const bearer = headersList.get('authorization')
     const uuid = bearer?.split(" ")[1]
 
-    const token = generateTokenFromUUID(uuid)
+    const token = hash(uuid ?? "")
 
     return await deletePackageTarball(tarballfile, token)
 

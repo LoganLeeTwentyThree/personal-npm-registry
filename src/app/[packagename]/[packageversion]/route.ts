@@ -10,9 +10,9 @@ export async function GET(
     const name = (await params).packagename;
     const version = (await params).packageversion;
 
-    const response = await (await getPackageRoot(name, '')).json()
+    const pack = await getPackageRoot(name, '')
 
-    if (response == null)
+    if (!pack)
     {
         return new NextResponse(JSON.stringify( {error: "Not found", reason: "Package with name '" + name + "' and version '" + version + "' not found"} ), {
             status: 404,
@@ -21,14 +21,14 @@ export async function GET(
         
     }
 
-    if (!Object.keys(response.versions).includes(version))
+    if (!Object.keys(pack.versions).includes(version))
     {
         return new NextResponse(JSON.stringify( {error: "Not found", reason: "Package with name '" + name + "' and version '" + version + "' not found"} ), {
             status: 404,
         })
     }
 
-    return new NextResponse(JSON.stringify( response.versions[version] ), {
+    return new NextResponse(JSON.stringify( pack.versions[version] ), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
         }

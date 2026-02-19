@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getUserByCredentials, insertUser, generateTokenFromUUID, setPendingToComplete } from "@/lib/database";
+import { getUserByCredentials, insertUser, hash, setPendingToComplete } from "@/lib/database";
 
 export async function POST(
     request: NextRequest,
@@ -16,7 +16,7 @@ export async function POST(
 
             await insertUser(body.UUID, body.Email, body.Password)
             await setPendingToComplete(body.UUID)
-            const token = generateTokenFromUUID(body.UUID)
+            const token = hash(body.UUID)
             
 
             return new Response(JSON.stringify(token), {

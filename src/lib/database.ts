@@ -1,11 +1,11 @@
 const crypto = require('crypto');
 const { MongoClient } = require('mongodb');
-import { PackageRoot } from '@/types';
+import { PackageRoot, User } from '@/types';
 import { DeleteObjectCommand, DeleteObjectsCommand, S3Client } from '@aws-sdk/client-s3';
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 
-export async function getPackageRoot(name : string, command : string)
+export async function getPackageRoot(name : string, command : string) : Promise<PackageRoot | null>
 {
     const uri = process.env.DATABASE_STRING
 
@@ -21,11 +21,7 @@ export async function getPackageRoot(name : string, command : string)
         if (response != null)
         {
             const { maintainers, _id, ...filteredResponse } = response;
-            return new NextResponse(JSON.stringify( { _id: name, ...filteredResponse } ), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-                }
-            )
+            return { _id: name, ...filteredResponse } 
         }else
         {
             
@@ -34,62 +30,39 @@ export async function getPackageRoot(name : string, command : string)
                 //go get package from npm registry...
                 let otherResponse = await fetch("https://registry.npmjs.org/" + name)
 
-                return new NextResponse(otherResponse.body, {
-                    status: otherResponse.status,
-                    headers: {
-                    'Content-type': 'application/json'
-                    }
-                })
+                return otherResponse.json()
             }else
             {
-                return new NextResponse(JSON.stringify( {"Error": "Not Found"} ), {
-                    status: 404,
-                    headers: { 'Content-Type': 'application/json' }
-                    }
-                )
+                return null
             }
             
             
         }
          
-    } catch {
-        return new NextResponse(JSON.stringify( {error: "Database Error"} ), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' }
-        })
     }finally {
         await client.close();
     }
 }
 
-//get hashed npm token
-export function generateTokenFromUUID(uuid : string | undefined)
+//hash a string
+export function hash(str : string) : string
 {
-    if (uuid == undefined)
-    {
-        return "invalid uuid"
-    }
     const hash = crypto.createHash('sha256')
-    hash.update(uuid)
-    const digest = hash.digest('hex')
+    hash.update(str)
+    const digest : string = hash.digest('hex')
     return digest
 }
 
 //retrieve a user by its hashed npm token
-export async function getUserByToken( token : string | undefined ) 
+export async function getUserByToken( token : string ) : Promise<User | null>
 {
-    if( token == undefined )
-    {
-        return null
-    }
-
     const uri = process.env.DATABASE_STRING;
     const client = new MongoClient(uri);
     try {
         const database = client.db('private-npm');
 
         //check if user is in db 
-        const user = await database.collection('npm-tokens').findOne({token: token})
+        const user = await database.collection('users').findOne({token: token})
 
         return user
     }finally {
@@ -97,46 +70,42 @@ export async function getUserByToken( token : string | undefined )
     }
 }
 
-export async function getUserByCredentials( email : string, password : string)
+export async function getUserByCredentials( email : string, password : string) : Promise<User | null>
 {
     const uri = process.env.DATABASE_STRING;
     const client = new MongoClient(uri);
     const database = client.db('private-npm');
     const users = database.collection('users')
 
-    const hash = crypto.createHash('sha256')
-    hash.update(password)
-    const digest = hash.digest('hex')
+    const hashpw = hash(password)
     
-    let result = users.findOne({ email: email, password: digest})
+    let result : User | null = users.findOne({ email: email, password: hashpw})
     return result
 }
 
 
-export async function insertUser( uuid : string | undefined, email : string, password : string )
+export async function insertUser( token : string, email : string, password : string )
 {
     const uri = process.env.DATABASE_STRING;
     const client = new MongoClient(uri);
     const database = client.db('private-npm');
 
-    const token = generateTokenFromUUID(uuid)
+    const hashtoken : string = hash(token)
     const dbuser = await getUserByToken(token)
 
-    const hash = crypto.createHash('sha256')
-    hash.update(password)
-    const digest = hash.digest('hex')
-
-    if ( dbuser == null && token != "invalid uuid") //no duplicate users
+    const pwhash : string = hash(password)
+    if ( !dbuser && token != "invalid uuid") //no duplicate users
     {
         
         try {
-            await database.collection('npm-tokens').insertOne(
-            {
-                token: token,
+            const newUser : User = {
+                token: hashtoken,
                 email: email, 
-                password: digest,
+                password: pwhash,
                 createdAt: new Date()
-            })
+            } 
+
+            await database.collection('users').insertOne(newUser)
         }finally 
         {
             await client.close();
