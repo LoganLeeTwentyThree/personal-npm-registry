@@ -35,21 +35,22 @@ export async function GET(
             status: 404,
             }
         );
-    }else{
-        if(result.status == "pending")
-        {
-            return new Response(JSON.stringify({}), {
-                status: 202,
-                }
-            );
-        }else if(result.status == "complete")
-        {
-            return new Response(JSON.stringify({token: result.token}), {
-                    status: 200,
-                }
-            );
-        }
-
     }
+    
+    if(result.status === "pending")
+    {
+        return new Response(JSON.stringify({}), {
+            status: 202,
+            }
+        );
+    }
+    
+    return new Response(JSON.stringify({token: result.token}), {
+            status: 200,
+        }
+    );
+    
+
+    
     
 }

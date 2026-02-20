@@ -17,13 +17,14 @@ export async function POST(
                 status: 404,
                 }
             );
-        }else{
-            await setPendingToComplete(body.UUID)
-            return new Response(JSON.stringify({token: result.token}), {
-                    status: 200,
-                }
-            );
         }
+        
+        await setPendingToComplete(body.UUID)
+        return new Response(JSON.stringify({token: result.token}), {
+                status: 200,
+            }
+        );
+        
 
     }catch{
         return new Response(JSON.stringify({}), {
