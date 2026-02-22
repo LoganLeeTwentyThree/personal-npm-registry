@@ -77,13 +77,9 @@ export default function LoginPage(props : LoginProps) {
               </span>
             </div>
 
-            <p className="text-white/70 text-lg leading-relaxed font-light mb-12">
-              The world's largest software registry. Discover, share, and reuse packages from hundreds of thousands of developers.
-            </p>
-
             <div className="flex flex-col gap-5">
               {[
-                { icon: "📦", text: "Access millions of open-source packages" },
+                { icon: "📦", text: "Access your organization's packages" },
                 { icon: "🔒", text: "Secure, private package publishing" },
                 { icon: "⚡", text: "Lightning-fast installs & dependency resolution" },
               ].map(({ icon, text }, i) => (
@@ -106,7 +102,7 @@ export default function LoginPage(props : LoginProps) {
             {/* Header */}
             <div className="mb-10">
               <h2 className="font-['Syne',sans-serif] text-[2.25rem] font-bold text-white tracking-tight mb-2">
-                Welcome to NPM Registry
+                Welcome to your NPM Registry
               </h2>
               <p className="text-white/60 text-[0.95rem] font-light">
                 {isSignUp

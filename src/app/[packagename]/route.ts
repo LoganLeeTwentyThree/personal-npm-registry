@@ -15,11 +15,12 @@ export async function PUT(
     const bearer = headersList.get('authorization')
     const uuid = bearer?.split(" ")[1]
 
-    const token = await hash(uuid ?? "")
+    const token = hash(uuid ?? "")
     const user = await getUserByToken(token)
 
     if(!user)
     {
+        console.log()
         return new NextResponse(JSON.stringify( {error: "Unauthorized"} ), {
             status: 401,
             headers: { 'Content-Type': 'application/json' }
@@ -27,6 +28,15 @@ export async function PUT(
     }
 
     const body = await request.json(); 
+    const exists = await getPackageRoot(packageName, "publish")
+    
+    if (exists && !exists.maintainers.includes(token))//check authorization
+    {
+        return new NextResponse(JSON.stringify( {"Error" : "Not Authorized"} ), {
+            status: 401,
+            headers: { 'Content-Type': 'application/json' }
+        })
+    }
 
     if( headersList.get('npm-command') == 'publish')
     {
@@ -57,17 +67,6 @@ export async function PUT(
         });        
         
         await s3_client.send(command)
-    }
-    
-
-    const exists = await getPackageRoot(packageName, "publish")
-    
-    if (!exists || exists.maintainers?.includes(token))//check authorization
-    {
-        return new NextResponse(JSON.stringify( {"Error" : "Not Authorized"} ), {
-            status: 401,
-            headers: { 'Content-Type': 'application/json' }
-        })
     }
 
     const { _attachments, access, ...packageRootBody} = body
