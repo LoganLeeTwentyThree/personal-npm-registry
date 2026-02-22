@@ -13,10 +13,10 @@ export type PackageRoot = {
     versions : {[version : string] : PackageVersionObject},
     mtime? : Timestamp,
     ctime? : Timestamp,
-    maintainers? : Array<string>,
+    maintainers : Array<string>,
     repository? : string,
     description? : string
-    dist_tags? : {[tag : string] : string}
+    'dist-tags' : {[tag : string] : string}
     deprecated? : string
 }
 

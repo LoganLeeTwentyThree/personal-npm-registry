@@ -3,15 +3,15 @@ import { getPackageRoot, hash, modifyPackage } from "@/lib/database";
 import { headers } from "next/headers";
 import semverRegex from 'semver-regex';
 
-export async function GET(
+export async function PUT(
 request: NextRequest,
     { params }: { params: Promise<{ packagename: string, tag: string}> },
 )
 {
     
-    const newTag = JSON.stringify(request.body)
-
-    if(semverRegex().test(newTag) == false)
+    const newTag = JSON.stringify(await request.json()).replaceAll("\"", '')
+    
+    if(semverRegex().test(newTag.slice(0, 50)) == false)
     {
         return new NextResponse("{error: invalid tag}",
         {
@@ -38,8 +38,8 @@ request: NextRequest,
     const token = bearer?.split(" ")[1]
 
     const hashToken = hash(token ?? "")
-    
-    if(!pack.maintainers?.includes(hashToken))
+
+    if(!pack.maintainers.includes(hashToken))
     {
         return new NextResponse("{error: unauthorized}",
         {
@@ -48,20 +48,16 @@ request: NextRequest,
         })
     }
 
-    const {dist_tags, ...rest} = pack
+    const tags = pack["dist-tags"]
     
     const tag = (await params).tag
-    dist_tags![tag] == newTag
+    tags[tag] = newTag
 
-    pack.dist_tags = dist_tags
+    pack["dist-tags"] = tags
 
-    await modifyPackage(pack, hashToken)
     
-    return new NextResponse("{ok: true}",
-    {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
-    })
+
+    return await modifyPackage(pack, hashToken)
     
 }
 
@@ -111,11 +107,11 @@ request: NextRequest,
         })
     }
 
-    const {dist_tags, ...rest} = pack
+    const tags = pack["dist-tags"]
 
-    delete dist_tags![tag]
+    delete tags[tag]
 
-    pack.dist_tags = dist_tags
+    pack['dist-tags'] = tags
 
     await modifyPackage(pack, hashToken)
     

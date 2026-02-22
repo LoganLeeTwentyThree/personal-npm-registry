@@ -18,27 +18,22 @@ export async function getPackageRoot(name : string, command : string) : Promise<
         const response = await test.findOne({name: name});
 
 
-        if (response != null)
+        if (response)
         {
-            const { maintainers, _id, ...filteredResponse } = response;
+            const { _id, ...filteredResponse } = response;
             return { _id: name, ...filteredResponse } 
-        }else
-        {
-            
-            if(command != 'publish' && process.env.STRICT == "false")
-            {
-                //go get package from npm registry...
-                let otherResponse = await fetch("https://registry.npmjs.org/" + name)
-
-                return otherResponse.json()
-            }else
-            {
-                return null
-            }
-            
-            
         }
-         
+        
+            
+        if(command != 'publish' && !process.env.STRICT)
+        {
+            //go get package from npm registry...
+            let otherResponse = await fetch("https://registry.npmjs.org/" + name)
+
+            return otherResponse.json()
+        }
+    
+        return null
     }finally {
         await client.close();
     }
@@ -150,9 +145,10 @@ export async function insertPackageMetaData( packageRoot : PackageRoot, token : 
         //check if package is in db 
         const root : PackageRoot | null = await database.collection('package-roots').findOne({name: packageRoot.name})
 
-        if (root == null) //new package
+        if (!root) //new package
         {
-            await database.collection('package-roots').insertOne({maintainers : [token], _rev: `1-${new ObjectId()}`, ...packageRoot})
+            packageRoot.maintainers = [token]
+            await database.collection('package-roots').insertOne({_rev: `1-${new ObjectId()}`, ...packageRoot})
 
         }else //existing package
         {
@@ -255,7 +251,7 @@ export async function modifyPackage(newRoot : PackageRoot, token : string)
 
         const obj = await roots.findOne({ _id: newRoot.name })
 
-        if( obj == null )
+        if( !obj )
         {
             return new NextResponse(JSON.stringify( {error: "Package not found"} ), {
                 status: 404,
@@ -271,7 +267,7 @@ export async function modifyPackage(newRoot : PackageRoot, token : string)
             })
         }
 
-        await roots.replaceOne({_id: newRoot.name}, {maintainers: obj.maintainers, ...newRoot})
+        const result = await roots.replaceOne({ _id: newRoot.name }, newRoot)
 
         return new NextResponse(JSON.stringify( {result: "Success"} ), {
             status: 200,

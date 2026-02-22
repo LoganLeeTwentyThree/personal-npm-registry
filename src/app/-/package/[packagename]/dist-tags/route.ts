@@ -12,11 +12,21 @@ request: NextRequest,
 
     if(pack)
     {
-        return new NextResponse(JSON.stringify(pack.dist_tags),
+        if(pack['dist-tags'])
+        {
+            return new NextResponse(JSON.stringify(pack['dist-tags']),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" }
+            })
+        }
+
+        return new NextResponse("{}",
         {
             status: 200,
             headers: { "Content-Type": "application/json" }
         })
+        
     }
 
     return new NextResponse("{error: not found}",

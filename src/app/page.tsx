@@ -45,6 +45,8 @@ export default async function Home({
       return {
         name: e.name,
         versions: e.versions,
+        'dist-tags': e['dist-tags'],
+        maintainers: e.maintainers
       }
   });
   } finally {
