@@ -1,21 +1,65 @@
-const crypto = require('crypto');
-const { MongoClient } = require('mongodb');
-import { PackageRoot, User } from '@/types';
+import crypto from 'crypto'
+import { PackageRoot, User, UUIDRecord } from '@/types';
 import { DeleteObjectCommand, DeleteObjectsCommand, S3Client } from '@aws-sdk/client-s3';
 import { NextResponse } from 'next/server';
-import { ObjectId } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
+
+function createMongoClient() : MongoClient
+{
+    const uri = process.env.DATABASE_STRING
+    
+    if(!uri)
+    {
+        throw new Error("Database string not set")
+    }
+    
+    const client = new MongoClient(uri)
+
+    if(!client)
+    {
+        throw new Error("Unable to create Mongo Client")
+    }
+
+    return client
+}
+
+export async function insertPendingToken(token : string)
+{
+    const client = createMongoClient()
+    try {
+      const database = client.db('private-npm');
+      const temp_ids = database.collection('temp-uuids');
+
+      await temp_ids.insertOne({token: token, status: "pending", inserttime: new Date()})
+    } finally {
+      await client.close();
+    }
+}
+
+export async function checkToken(token : string) : Promise<UUIDRecord | null>
+{
+    const client = createMongoClient()
+    try {
+        const database = client.db('private-npm');
+        const temp_ids = database.collection<UUIDRecord>('temp-uuids');
+
+        const result = await temp_ids.findOne({token: token})
+        return result
+    } finally {
+      await client.close();
+    }
+}
 
 export async function getPackageRoot(name : string, command : string) : Promise<PackageRoot | null>
 {
-    const uri = process.env.DATABASE_STRING
-
-    const client = new MongoClient(uri)
+    
+    const client = createMongoClient()
 
     try {
         const database = client.db('private-npm');
-        const test = database.collection('package-roots');
+        const test = database.collection<PackageRoot>('package-roots');
 
-        const response = await test.findOne({name: name});
+        const response = (await test.findOne({name: name}))
 
 
         if (response)
@@ -51,13 +95,13 @@ export function hash(str : string) : string
 //retrieve a user by its hashed npm token
 export async function getUserByToken( token : string ) : Promise<User | null>
 {
-    const uri = process.env.DATABASE_STRING;
-    const client = new MongoClient(uri);
+    const client = createMongoClient()
+
     try {
         const database = client.db('private-npm');
 
         //check if user is in db 
-        const user = await database.collection('users').findOne({token: token})
+        const user = await database.collection<User>('users').findOne({token: token})
 
         return user
     }finally {
@@ -67,22 +111,20 @@ export async function getUserByToken( token : string ) : Promise<User | null>
 
 export async function getUserByCredentials( email : string, password : string) : Promise<User | null>
 {
-    const uri = process.env.DATABASE_STRING;
-    const client = new MongoClient(uri);
+    const client = createMongoClient()
     const database = client.db('private-npm');
-    const users = database.collection('users')
+    const users = database.collection<User>('users')
 
     const hashpw = hash(password)
     
-    let result : User | null = users.findOne({ email: email, password: hashpw})
+    let result : User | null = await users.findOne({ email: email, password: hashpw})
     return result
 }
 
 
 export async function insertUser( token : string, email : string, password : string )
 {
-    const uri = process.env.DATABASE_STRING;
-    const client = new MongoClient(uri);
+    const client = createMongoClient()
     const database = client.db('private-npm');
 
     const hashtoken : string = hash(token)
@@ -111,8 +153,7 @@ export async function insertUser( token : string, email : string, password : str
 
 export async function setPendingToComplete( uuid: string )
 {
-    const uri = process.env.DATABASE_STRING;
-    const client = new MongoClient(uri);
+    const client = createMongoClient()
     const database = client.db('private-npm');
     const tempUUIDS = database.collection('temp-uuids')
 
@@ -136,19 +177,18 @@ export async function setPendingToComplete( uuid: string )
 
 export async function insertPackageMetaData( packageRoot : PackageRoot, token : string )
 {
-    const uri = process.env.DATABASE_STRING;
-    const client = new MongoClient(uri);
+    const client = createMongoClient()
 
     try {
         const database = client.db('private-npm');
 
         //check if package is in db 
-        const root : PackageRoot | null = await database.collection('package-roots').findOne({name: packageRoot.name})
+        const root : PackageRoot | null = await database.collection<PackageRoot>('package-roots').findOne({name: packageRoot.name})
 
         if (!root) //new package
         {
             packageRoot.maintainers = [token]
-            await database.collection('package-roots').insertOne({_rev: `1-${new ObjectId()}`, ...packageRoot})
+            await database.collection<PackageRoot>('package-roots').insertOne({_rev: `1-${new ObjectId()}`, ...packageRoot})
 
         }else //existing package
         {
@@ -176,14 +216,11 @@ export async function insertPackageMetaData( packageRoot : PackageRoot, token : 
 
 export async function deletePackageMetaData(name : string, token : string)
 {
-    const uri = process.env.DATABASE_STRING;
-
-    const client = new MongoClient(uri);
-
+    const client = createMongoClient()
    
     try {
         const database = client.db('private-npm');
-        const roots = database.collection('package-roots');
+        const roots = database.collection<PackageRoot>('package-roots');
 
         const obj = await roots.findOne({ _id: name })
 
@@ -240,14 +277,12 @@ export async function deletePackageMetaData(name : string, token : string)
 
 export async function modifyPackage(newRoot : PackageRoot, token : string)
 {
-    const uri = process.env.DATABASE_STRING;
-
-    const client = new MongoClient(uri);
+    const client = createMongoClient()
 
    
     try {
         const database = client.db('private-npm');
-        const roots = database.collection('package-roots');
+        const roots = database.collection<PackageRoot>('package-roots');
 
         const obj = await roots.findOne({ _id: newRoot.name })
 
@@ -282,9 +317,7 @@ export async function modifyPackage(newRoot : PackageRoot, token : string)
 
 export async function deletePackageTarball(filename : string, token : string)
 {
-    const uri = process.env.DATABASE_STRING;
-
-    const client = new MongoClient(uri);
+    const client = createMongoClient()
     const database = client.db('private-npm');
     const roots = database.collection('package-roots');
     const obj = await roots.findOne({ name: filename.substring(0, filename.lastIndexOf('-')).trim() })

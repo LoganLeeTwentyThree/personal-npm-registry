@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { hash, getPackageRoot, getUserByToken, insertPackageMetaData } from '@/lib/database';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-const crypto = require('crypto');
+import crypto from 'crypto'
 
 export async function PUT(
     request: NextRequest,

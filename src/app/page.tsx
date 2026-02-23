@@ -1,7 +1,6 @@
 import { PackageRoot } from "@/types";
 const { MongoClient } = require('mongodb');
 import LoginPage from "@/components/LoginPage"
-import { headers } from "next/headers";
 import PackageBrowser from "@/components/PackageBrowser";
 
 export default async function Home({
@@ -43,6 +42,7 @@ export default async function Home({
     result = await roots.find().toArray()
     result = result.map((e : PackageRoot) => {
       return {
+        _id: e._id,
         name: e.name,
         versions: e.versions,
         'dist-tags': e['dist-tags'],

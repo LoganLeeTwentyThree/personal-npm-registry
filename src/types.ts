@@ -9,6 +9,8 @@ export type PackageVersionObject = {
 }
 
 export type PackageRoot = {
+    _rev?: string,
+    _id: string,
     name : string,
     versions : {[version : string] : PackageVersionObject},
     mtime? : Timestamp,
@@ -18,6 +20,13 @@ export type PackageRoot = {
     description? : string
     'dist-tags' : {[tag : string] : string}
     deprecated? : string
+}
+
+export type UUIDRecord = {
+    _id?: string,
+    uuid: string,
+    status: string,
+    token: string,
 }
 
 export type User = {
